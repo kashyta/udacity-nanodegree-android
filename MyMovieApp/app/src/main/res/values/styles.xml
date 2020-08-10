@@ -7,4 +7,25 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="small">
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textAlignment">viewStart</item>
+        <item name ="android:singleLine">false</item>
+        <item name="android:scrollbars">vertical</item>
+    </style>
+
+    <style name="detailsHeading">
+        <item name="android:textSize">20sp</item>
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textAllCaps">true</item>
+    </style>
+
+    <style name="large">
+        <item name="android:textSize">24sp</item>
+        <item name ="android:singleLine">false</item>
+        <item name="android:scrollbars">vertical</item>
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
 </resources>

@@ -1,16 +1,7 @@
 package com.test.mymovieapp;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-
 import android.content.Context;
-import android.content.Intent;
 import android.content.res.Configuration;
-import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -18,7 +9,20 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
+
+import com.test.mymovieapp.adapter.MovieAdapter;
+import com.test.mymovieapp.model.Movie;
+import com.test.mymovieapp.model.Movie_Results;
+import com.test.mymovieapp.viewModel.MainActivityViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -29,63 +33,169 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+
 public class MainActivity extends AppCompatActivity {
 
-    public static final String API_KEY = com.test.mymovieapp.BuildConfig.THE_MOVIE_DB_API_TOKEN;
-    private static final int FIRST_PAGE = 1;
+    public static String API_KEY = com.test.mymovieapp.BuildConfig.THE_MOVIE_DB_API_TOKEN;
+    private int FIRST_PAGE = 1;
+    public ArrayList<Movie> movieResults;
 
-    private int totalPages;
-    private int currentSortMode = 1;
-
-    private Call<API_Results> call;
-    private List<Movie> movieResults;
+    private MainActivityViewModel viewModel;
     private MovieAdapter movieAdapter;
+    private MovieDataService movieService;
+    private static String actionBarTitle;
+    private boolean mostPopularOptionSelected = true;
+    private boolean topRatedOptionSelected = false;
 
-    private SwipeRefreshLayout pullToRefresh;
+    public static final String MOVIES_LIST = "MOVIES_LIST";
+    public static final String RECYCLER_VIEW_LAYOUT_MANAGER_STATE = "RECYCLER_VIEW_LAYOUT_MANAGER_STATE";
+    public static final String ACTIVITY_TITLE = "ACTIVITY_TITLE";
+    public static final String SELECTED_MOVIE = "SELECTED_MOVIE";
+    public static final String MOST_POPULAR_OPTION_SELECTED = "MOST_POPULAR_OPTION_SELECTED";
+    public static final String TOP_RATED_OPTION_SELECTED = "TOP_RATED_OPTION_SELECTED";
 
     @BindView(R.id.rv_main_activity)
-    RecyclerView recyclerView;
+    public RecyclerView rvMain;
+
+    @BindView(R.id.progressBar)
+    public ProgressBar progressBar;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         ButterKnife.bind(this);
+        movieResults = new ArrayList<>();
 
-        pullToRefresh = findViewById(R.id.pullToRefresh);
-        pullToRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                refreshData();
-                pullToRefresh.setRefreshing(false);
-            }
-        });
-        if(!isNetworkAvailable()){
-            recyclerView.setVisibility(View.GONE);
+        movieAdapter = new MovieAdapter(this, movieResults, rvMain);
+        viewModel = new ViewModelProvider(this).get(MainActivityViewModel.class);
+
+        if (!isNetworkAvailable()) {
+            rvMain.setVisibility(View.GONE);
         }
+        GridLayoutManager manager = new GridLayoutManager(this, 2);
 
-        GridLayoutManager manager = new GridLayoutManager(this,2);
-        manager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+        rvMain.setLayoutManager(manager);
+        rvMain.setHasFixedSize(true);
 
-            @Override
-            public int getSpanSize(int position) {
-                return 1;
-            }
-        });
-        recyclerView.setLayoutManager(manager);
-        recyclerView.setHasFixedSize(true);
 
-        EndlessRecyclerViewScrollListener scrollListener = new EndlessRecyclerViewScrollListener(manager) {
-            @Override
-            public void onLoadMore(int page, int totalItemsCount, RecyclerView view) {
-                if ((page + 1) <= totalPages && currentSortMode != 3) {
-                    loadPage(page + 1);
+        viewModel.getFavoriteMovies().observe(this, favorites -> {
+            if (favorites != null && !mostPopularOptionSelected && !topRatedOptionSelected) {
+                if (movieResults == null) {
+                    movieResults = new ArrayList<>();
+                } else {
+                    movieAdapter.clear();
+                }
+                movieAdapter.addAll(favorites);
+
+                if (movieResults.size() == 0) {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(getApplicationContext(), R.string.No_Movie_Added_Yet, Toast.LENGTH_SHORT).show();
                 }
             }
-        };
+        });
+        movieService = Client.getRetrofitInstance().create(MovieDataService.class);
 
-        recyclerView.addOnScrollListener(scrollListener);
-        loadPage(FIRST_PAGE);
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey(MOVIES_LIST)) {
+                progressBar.setVisibility(View.GONE);
+                setTitle(savedInstanceState.getString(ACTIVITY_TITLE));
+                movieResults = savedInstanceState.getParcelableArrayList(MOVIES_LIST);
+                movieAdapter.clear();
+                movieAdapter.setData(movieResults);
+            }
+
+            if (savedInstanceState.containsKey(MOST_POPULAR_OPTION_SELECTED)) {
+                mostPopularOptionSelected = savedInstanceState.getBoolean(MOST_POPULAR_OPTION_SELECTED);
+            }
+            if (savedInstanceState.containsKey(TOP_RATED_OPTION_SELECTED)) {
+                topRatedOptionSelected = savedInstanceState.getBoolean(TOP_RATED_OPTION_SELECTED);
+            }
+        }
+
+        if (savedInstanceState == null) {
+            if (mostPopularOptionSelected) {
+                progressBar.setVisibility(View.VISIBLE);
+                getPopularMovies();
+            } else if (topRatedOptionSelected) {
+                progressBar.setVisibility(View.VISIBLE);
+                getTopRatedMovies();
+            }
+        }
+    }
+
+
+    private void getPopularMovies() {
+        if (MovieUtils.getInstance().isNetworkAvailable(this)) {
+
+            Call<Movie_Results> call = movieService.getPopularMovies(API_KEY, FIRST_PAGE);
+            call.enqueue(new Callback<Movie_Results>() {
+                @Override
+                public void onResponse(@NonNull Call<Movie_Results> call, @NonNull Response<Movie_Results> response) {
+                    if (response.isSuccessful()) {
+                        progressBar.setVisibility(View.INVISIBLE);
+                        if (response.body().getMovieResult() != null) {
+                            movieResults = response.body().getMovieResult();
+                            movieAdapter.addAll(response.body().getMovieResult());
+                        }
+                        rvMain.setAdapter(movieAdapter);
+                        movieAdapter.notifyDataSetChanged();
+                    } else {
+                        assert response.body() != null;
+                        List<Movie> movies = response.body().getMovieResult();
+                        for (Movie movie : movies) {
+                            movieResults.add(movie);
+                            movieAdapter.notifyItemInserted(movieResults.size() - 1);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Movie_Results> call, Throwable t) {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(MainActivity.this, getResources().getString(R.string.Error_Fetching_Data), Toast.LENGTH_SHORT).show();
+                }
+            });
+        } else {
+            progressBar.setVisibility(View.INVISIBLE);
+            Toast.makeText(MainActivity.this, getResources().getString(R.string.Network_Status_Not_Available), Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void getTopRatedMovies() {
+        if (MovieUtils.getInstance().isNetworkAvailable(this)) {
+
+            Call<Movie_Results> call = movieService.getTopRatedMovies(API_KEY, FIRST_PAGE);
+            call.enqueue(new Callback<Movie_Results>() {
+                @Override
+                public void onResponse(Call<Movie_Results> call, Response<Movie_Results> response) {
+                    if (response.isSuccessful()) {
+                        progressBar.setVisibility(View.INVISIBLE);
+                        if (response.body().getMovieResult() != null) {
+                            movieResults = response.body().getMovieResult();
+                            movieAdapter.addAll(response.body().getMovieResult());
+                        }
+                        rvMain.setAdapter(movieAdapter);
+                        movieAdapter.notifyDataSetChanged();
+                    } else {
+                        assert response.body() != null;
+                        List<Movie> movies = response.body().getMovieResult();
+                        for (Movie movie : movies) {
+                            movieResults.add(movie);
+                            movieAdapter.notifyItemInserted(movieResults.size() - 1);
+                        }
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Movie_Results> call, Throwable t) {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(MainActivity.this, getResources().getString(R.string.Error_Fetching_Data), Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
     }
 
     @Override
@@ -97,147 +207,73 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        //SortID 1 -> Popularity
-        //SortID 2 -> Top rated
+
         switch (item.getItemId()) {
-            case R.id.sort_by_popularity:
-                currentSortMode = 1;
+            case R.id.topRated:
+                progressBar.setVisibility(View.VISIBLE);
+                mostPopularOptionSelected = false;
+                topRatedOptionSelected = true;
+                movieAdapter.clear();
+                getTopRatedMovies();
+                setTitle(R.string.toprated_movies);
+                actionBarTitle = getResources().getString(R.string.toprated_movies);
                 break;
-            case R.id.sort_by_topRated:
-                currentSortMode = 2;
+            case R.id.popular:
+                mostPopularOptionSelected = true;
+                topRatedOptionSelected = false;
+                progressBar.setVisibility(View.VISIBLE);
+                movieAdapter.clear();
+                getPopularMovies();
+                setTitle(R.string.popular_movies);
+                actionBarTitle = getResources().getString(R.string.popular_movies);
                 break;
-            case R.id.sort_by_my_movieList:
-                currentSortMode = 3;
-                break;
-        }
-        if (currentSortMode != 3) {
-            loadPage(FIRST_PAGE);
-        } else {
-            ArrayList<Movie> listMovies = getMovies();
-            movieAdapter = new MovieAdapter(listMovies, new MovieClickListener() {
-                @Override
-                public void onMovieClick(Movie movie) {
-                    Intent intent = new Intent(MainActivity.this, MovieDetailsActivity.class);
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("movie", movie);
-                    intent.putExtras(bundle);
-                    startActivity(intent);
+
+            case R.id.favorite:
+                mostPopularOptionSelected = false;
+                topRatedOptionSelected = false;
+                progressBar.setVisibility(View.VISIBLE);
+                movieAdapter.clear();
+                setTitle(R.string.favorite_movies);
+                actionBarTitle = getResources().getString(R.string.favorite_movies);
+                List<Movie> favoriteMovies = viewModel.getFavoriteMovies().getValue();
+                if (favoriteMovies != null && favoriteMovies.size() > 0) {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    movieAdapter.addAll(favoriteMovies);
+                } else {
+                    progressBar.setVisibility(View.INVISIBLE);
+                    Toast.makeText(getApplicationContext(), R.string.No_Movie_Added_Yet, Toast.LENGTH_SHORT).show();
                 }
-            });
-            recyclerView.setAdapter(movieAdapter);
+                break;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private void loadPage(final int page) {
-        MovieDataService movieDataService = Client.getRetrofitInstance().create(MovieDataService.class);
-
-        switch (currentSortMode) {
-            case 1:
-                call = movieDataService.getPopularMovies(page, API_KEY);
-                break;
-            case 2:
-                call = movieDataService.getTopRatedMovies(page, API_KEY);
-                break;
-        }
-        call.enqueue(new Callback<API_Results>() {
-            @Override
-            public void onResponse(@NonNull Call<API_Results> call, @NonNull Response<API_Results> response) {
-
-                if (page == 1) {
-                    assert response.body() != null;
-                    movieResults = response.body().getMovieResult();
-                    assert response.body() != null;
-                    totalPages = response.body().getTotalPages();
-
-                    movieAdapter = new MovieAdapter(movieResults, new MovieClickListener() {
-                        @Override
-                        public void onMovieClick(Movie movie) {
-                            Intent intent = new Intent(MainActivity.this, MovieDetailsActivity.class);
-                            Bundle bundle = new Bundle();
-                            bundle.putSerializable("movie", movie);
-                            intent.putExtras(bundle);
-                            startActivity(intent);
-                        }
-                    });
-                    recyclerView.setAdapter(movieAdapter);
-                    movieAdapter.notifyDataSetChanged();
-                } else {
-                    assert response.body() != null;
-                    List<Movie> movies = response.body().getMovieResult();
-                    for (Movie movie : movies) {
-                        movieResults.add(movie);
-                        movieAdapter.notifyItemInserted(movieResults.size() - 1);
-                    }
-                }
-
-            }
-
-            @Override
-            public void onFailure(Call<API_Results> call, Throwable t) {
-                Toast.makeText(MainActivity.this, R.string.error_fetching_data, Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
-
-
-    public static String movieImagePathBuilder(String imagePath) {
-        return "https://image.tmdb.org/t/p/" +
-                "w500" +
-                imagePath;
     }
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
 
-        // Checks the orientation of the screen
         if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            recyclerView.setLayoutManager(new GridLayoutManager(this, 4));
-        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
-            recyclerView.setLayoutManager(new GridLayoutManager(this, 2));
+            rvMain.setLayoutManager(new GridLayoutManager(this, 4));
+        } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
+            rvMain.setLayoutManager(new GridLayoutManager(this, 2));
         }
     }
 
-    private ArrayList<Movie> getMovies(){
-        ArrayList<Movie> movieList = new ArrayList<>();
-        Cursor cursor = getContentResolver()
-                .query(MovieContent.MovieEntry.CONTENT_URI,null,null,null,null);
-
-        if(cursor != null && cursor.moveToFirst()){
-            do{
-                Movie movie = new Movie();
-
-                int id = cursor.getInt(cursor.getColumnIndex("movie_id"));
-                String movieTitle = cursor.getString(cursor.getColumnIndex("movie_title"));
-                String movieOverview = cursor.getString(cursor.getColumnIndex("movie_overview"));
-                double movieVoteAverage = cursor.getDouble(cursor.getColumnIndex("movie_vote_average"));
-                String movieReleaseDate = cursor.getString(cursor.getColumnIndex("movie_release_date"));
-                String moviePosterPath = cursor.getString(cursor.getColumnIndex("movie_poster_path"));
-
-                movie.setId(id);
-                movie.setTitle(movieTitle);
-                movie.setOverview(movieOverview);
-                movie.setVoteAverage(movieVoteAverage);
-                movie.setReleaseDate(movieReleaseDate);
-                movie.setPosterPath(moviePosterPath);
-
-                movieList.add(movie);
-
-            }while(cursor.moveToNext());
-        }
-        cursor.close();
-
-        return movieList;
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean(MOST_POPULAR_OPTION_SELECTED, mostPopularOptionSelected);
+        outState.putBoolean(TOP_RATED_OPTION_SELECTED, topRatedOptionSelected);
+        outState.putParcelableArrayList(MOVIES_LIST, movieResults);
+        outState.putString(ACTIVITY_TITLE, actionBarTitle);
+        outState.putParcelable(RECYCLER_VIEW_LAYOUT_MANAGER_STATE, rvMain.getLayoutManager().onSaveInstanceState());
+        super.onSaveInstanceState(outState);
     }
+
     public boolean isNetworkAvailable() {
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
         return (networkInfo != null && networkInfo.isConnected());
     }
-    public void refreshData(){
-        finish();
-        startActivity(getIntent());
-    }
+
 }

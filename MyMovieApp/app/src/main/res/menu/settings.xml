@@ -1,18 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app = "http://schemas.android.com/apk/res-auto">
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-        android:title="@string/settings"
-        app:showAsAction="always">
-        <menu>
-            <item android:id="@+id/sort_by_popularity"
-                android:title="@string/sort_popularity" />
-            <item android:id="@+id/sort_by_topRated"
-                android:title="@string/sort_top_rated" />
-            <item android:id="@+id/sort_by_my_movieList"
-                android:title="@string/sort_myMovieList"
-                android:visible="false"
-                />
-        </menu>
-    </item>
+        android:id="@+id/topRated"
+        android:title="@string/toprated_movies"
+        android:orderInCategory="1"
+        android:visible="true"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/popular"
+        android:title="@string/popular_movies"
+        android:visible="true"
+        android:orderInCategory="2"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/favorite"
+        android:title="@string/favorite_movies"
+        android:visible="true"
+        android:orderInCategory="3"
+        app:showAsAction="never" />
 </menu>

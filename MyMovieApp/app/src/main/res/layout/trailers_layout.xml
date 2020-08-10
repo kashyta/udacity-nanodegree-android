@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginEnd="@dimen/trailer_margin">
+
+    <ImageView
+        android:id="@+id/iv_trailer"
+        android:layout_width="wrap_content"
+        android:layout_margin="4dp"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/no_description_available"
+        android:scaleType="centerCrop"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_trailer_name"
+        android:layout_width="220dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        style="@style/small"
+        android:layout_margin="@dimen/trailer_margin"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toRightOf="@id/iv_trailer"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="Official Trailer 1" />
+
+    <ImageButton
+        android:id="@+id/play_trailer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/trailer_margin"
+        android:layout_marginLeft="@dimen/trailer_margin"
+        android:layout_marginTop="@dimen/trailer_margin"
+        android:layout_marginEnd="@dimen/trailer_margin"
+        android:layout_marginRight="@dimen/trailer_margin"
+        android:layout_marginBottom="@dimen/trailer_margin"
+        android:contentDescription="@string/no_description_available"
+        android:background="@android:color/transparent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:ignore="MissingConstraints" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

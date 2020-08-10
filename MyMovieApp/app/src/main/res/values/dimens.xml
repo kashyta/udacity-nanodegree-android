@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name = "detail_iv_height">200dp</dimen>
+    <dimen name = "detail_margin_bottom">8dp</dimen>
+    <dimen name ="details_tv_margin">10dp</dimen>
+    <dimen name ="layout_margin">5dp</dimen>
+    <dimen name ="layout_margin_end">10dp</dimen>
+    <dimen name = "trailer_margin">10dp</dimen>
+    <dimen name = "favBtn_layout">60dp</dimen>
+    <dimen name = "favBtn_padding">20dp</dimen>
+    <item name = "normal_speed" type= "dimen" format ="float">100</item>
+</resources>

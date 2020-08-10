@@ -1,10 +1,23 @@
 <resources>
-    <string name="app_name">MyMovieApp</string>
-    <string name ="movie_poster">Movie Poster</string>
-    <string name="settings">Settings</string>
-    <string name="sort_popularity">Sort By Most Popular</string>
-    <string name="sort_top_rated">Sort By Highest Rated</string>
-    <string name="sort_myMovieList">Sort By My Movie List</string>
-    <string name ="error_fetching_data">Something went wrong..Please try again later!</string>
-    <string name="plot_synopsis">Plot Synopsis:</string>
+    <string name="app_name"> MyMovieApp </string>
+    <string name="movie_poster"> Movie Poster </string>
+    <string name="toprated_movies"> Top Rated Movies </string>
+    <string name="popular_movies"> Popular Movies </string>
+    <string name="favorite_movies"> Favorite Movies </string>
+    <string name="rating"> Rating : </string>
+    <string name="releaseDate"> Release Date : </string>
+    <string name ="plot_synopsis"> Plot Synopsis : </string>
+    <string name="trailer"> Trailers : </string>
+    <string name= "reviews"> Reviews : </string>
+    <string name= "image">Image </string>
+    <string name = "plot_synopsis_not_available"> Plot Synopsis Not Available </string>
+    <string name="trailerNotAvailable"> Trailers Not Available </string>
+    <string name="reviewsNotAvailable"> Reviews not Available </string>
+    <string name="no_description_available"> Description not available </string>
+    <string name="Not_Available_Text"> Not available </string>
+    <string name="Favorite_Removed"> Movie removed from favorites list </string>
+    <string name="Favorite_Added"> Movie added to favorites list </string>
+    <string name="No_Movie_Added_Yet"> No movie added to Favorite List Yet! </string>
+    <string name="Network_Status_Not_Available"> Network Connection Not Available </string>
+    <string name="Error_Fetching_Data"> Something went wrong.. Please try again later! </string>
 </resources>

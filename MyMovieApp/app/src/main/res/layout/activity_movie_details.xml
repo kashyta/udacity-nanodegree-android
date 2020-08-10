@@ -1,100 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout
+<androidx.core.widget.NestedScrollView
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app = "http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:theme="@style/AppTheme">
+    android:background="#6E707C">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-        <LinearLayout
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageView
+            android:id="@+id/iv_details_moviePoster"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/detail_iv_height"
+            android:layout_marginBottom="@dimen/detail_margin_bottom"
+            android:adjustViewBounds="true"
+            android:contentDescription="@string/image"
+            android:scaleType="centerCrop" />
+
+        <include layout="@layout/titlebar" />
+
+        <TextView
+            android:id="@+id/tv_details_releaseDate"
+            style="@style/detailsHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/details_tv_margin"
+            android:text="@string/releaseDate"/>
+
+        <TextView
+            android:id="@+id/tv_details_voteAverage"
+            style="@style/detailsHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/details_tv_margin"
+            android:text="@string/rating"/>
+
+        <TextView
+            android:id="@+id/tv_details_plot_heading"
+            style="@style/detailsHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/details_tv_margin"
+            android:text ="@string/plot_synopsis"/>
+
+        <TextView
+            android:id="@+id/tv_details_plot"
+            style="@style/small"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
-            <TextView
-                android:id="@+id/movie_details_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:autoSizeTextType="uniform"
-                android:text="Title"
-                android:textSize="24sp"
-                android:layout_margin="10dp"
-                android:textColor="@color/colorPrimary"
-                tools:ignore="HardcodedText"
-                 />
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/detail_margin_bottom" />
 
-            <TextView
-                android:id="@+id/movie_details_release_date"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:textSize="24sp"
-                android:text="12/05/2018"
-                android:textColor="@color/colorPrimary"
-                tools:ignore="HardcodedText" />
+        <TextView
+            android:id="@+id/tv_trailers_heading"
+            style="@style/detailsHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/details_tv_margin"
+            android:text="@string/trailer" />
 
-            <TextView
-                android:id="@+id/movie_details_rating"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:text="7.7/10"
-                android:textSize="24sp"
-                android:textColor="@color/colorPrimary"
-                tools:ignore="HardcodedText" />
-
-            <TextView
-                android:id="@+id/movie_details_overview_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:textSize="24sp"
-                android:text="@string/plot_synopsis"
-                android:textColor="@color/colorPrimary" />
-
-            <TextView
-                android:id="@+id/movie_details_overview"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="10dp"
-                android:textSize="20sp"
-                android:autoSizeTextType="uniform"
-                android:text="Sample movie description."
-                android:textColor="#000"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/movie_details_overview_label"
-                tools:targetApi="o"
-                tools:ignore="HardcodedText" />
-        </LinearLayout>
-    </ScrollView>
-
-    <com.google.android.material.appbar.AppBarLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <com.takusemba.multisnaprecyclerview.MultiSnapRecyclerView
+            android:id="@+id/rv_trailer"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginBottom="20dp"
+            android:orientation="vertical"
+            app:msrv_gravity="start"
+            app:msrv_ms_per_inch="@dimen/normal_speed"
+            app:msrv_snap_count="1" />
 
-            <ImageView
-                android:id="@+id/movie_details_poster"
-                android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:adjustViewBounds="true"
-                android:contentDescription="@string/movie_poster"
-                android:src="@drawable/movie_poster_backdrop"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:id="@+id/tv_trailers_not_available"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/details_tv_margin"
+            android:text="@string/trailerNotAvailable"
+            android:visibility="gone" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tv_reviews_heading"
+            style="@style/detailsHeading"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/details_tv_margin"
+            android:text="@string/reviews" />
 
-    </com.google.android.material.appbar.AppBarLayout>
+        <com.takusemba.multisnaprecyclerview.MultiSnapRecyclerView
+            android:id="@+id/rv_reviews"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
+            android:orientation="vertical"
+            app:msrv_gravity="start"
+            app:msrv_ms_per_inch="@dimen/normal_speed"
+            app:msrv_snap_count="2" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <TextView
+            android:id="@+id/tv_reviews_not_available"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/details_tv_margin"
+            android:layout_marginBottom="@dimen/details_tv_margin"
+            android:text="@string/reviewsNotAvailable"
+            android:visibility="gone" />
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>
